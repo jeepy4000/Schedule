@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research Schedule</title>
+
+  <!-- html2canvas for image export -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --border: #1f2933;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #020617, #020617);
+      color: var(--text);
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    .clear {
+      background: var(--danger);
+      color: white;
+    }
+
+    .share {
+      background: var(--accent);
+      color: white;
+    }
+
+    .schedule {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 18px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    td:first-child, th:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    select.meeting-required {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #ef4444;
+    }
+
+    select.meeting-optional {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: #3b82f6;
+    }
+
+    footer {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">Research Schedule</div>
+      <div class="actions">
+        <button class="clear" onclick="clearAll()">Clear All</button>
+        <button class="share" onclick="shareSchedule()">Share</button>
+      </div>
+    </div>
+
+    <div class="schedule" id="schedule">
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Morning</th>
+            <th>Lunch</th>
+          </tr>
+        </thead>
+        <tbody>
+          <script>
+            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+            for (const day of days) {
+              document.write(`
+                <tr>
+                  <td>${day}</td>
+                  <td>${dropdown()}</td>
+                  <td>${dropdown()}</td>
+                </tr>
+              `);
+            }
+
+            function dropdown() {
+              return `
+                <select onchange="updateStyle(this)">
+                  <option value="none" selected>No Meeting</option>
+                  <option value="required">Meeting (Required)</option>
+                  <option value="optional">Meeting (Optional)</option>
+                </select>
+              `;
+            }
+          </script>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      Designed for GitHub Pages · iOS share supported
+    </footer>
+  </div>
+
+  <script>
+    function updateStyle(select) {
+      select.classList.remove("meeting-required", "meeting-optional");
+
+      if (select.value === "required") {
+        select.classList.add("meeting-required");
+      } else if (select.value === "optional") {
+        select.classList.add("meeting-optional");
+      }
+    }
+
+    function clearAll() {
+      document.querySelectorAll("select").forEach(select => {
+        select.value = "none";
+        updateStyle(select);
+      });
+    }
+
+    async function shareSchedule() {
+      const element = document.getElementById("schedule");
+
+      const canvas = await html2canvas(element, {
+        backgroundColor: "#020617",
+        scale: 2
+      });
+
+      const blob = await new Promise(resolve =>
+        canvas.toBlob(resolve, "image/png")
+      );
+
+      const file = new File([blob], "research-schedule.png", { type: "image/png" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Research Schedule",
+          text: "Here is my research schedule.",
+          files: [file]
+        });
+      } else {
+        const link = document.createElement("a");
+        link.download = "research-schedule.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      }
+    }
+  </script>
+</body>
+</html>
